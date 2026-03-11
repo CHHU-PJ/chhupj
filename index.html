@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" /> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Richard Wagamese | By Charles Huang</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;300;400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+    /* =========================================
+       0. Core Universe CSS (Dark Theme Only)
+       ========================================= */
+    :root {
+        --c-bg: #000000; 
+        --c-surface: #1d1d1f;
+        --c-text-main: #f5f5f7;
+        --c-text-muted: #86868b;
+        --c-accent: #2997ff; 
+        --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; cursor: default; }
+    
+    body {
+        background-color: var(--c-bg);
+        color: var(--c-text-main);
+        font-family: "Inter", -apple-system, sans-serif;
+        overflow-x: hidden;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: var(--c-bg); }
+    ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #555; }
+
+    /* =========================================
+       1. The Loader
+       ========================================= */
+    #loader {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: var(--c-bg); z-index: 9999;
+        display: flex; justify-content: center; align-items: center;
+        flex-direction: column;
+        transition: opacity 0.8s ease, visibility 0.8s;
+    }
+    .loader-logo {
+        font-size: 24px; font-weight: 700; letter-spacing: 2px;
+        background: linear-gradient(90deg, #fff, #444, #fff);
+        -webkit-background-clip: text; color: transparent;
+        background-size: 200% 100%;
+        animation: shine 2s infinite linear;
+        text-transform: uppercase;
+    }
+    .loader-line {
+        width: 0; height: 2px; background: var(--c-accent); margin-top: 20px;
+        animation: loadLine 1.5s var(--ease-out) forwards;
+    }
+    @keyframes shine { 0% { background-position: 200% center; } 100% { background-position: -200% center; } }
+    @keyframes loadLine { 0% { width: 0; } 100% { width: 200px; } }
+
+    /* =========================================
+       2. Dynamic Island Navbar (5 Items)
+       ========================================= */
+    .navbar {
+        position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+        width: auto; padding: 12px 24px;
+        background: rgba(30, 30, 30, 0.6);
+        backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+        border-radius: 100px; border: 1px solid rgba(255,255,255,0.1);
+        z-index: 1000; display: flex; align-items: center; gap: 24px;
+        transition: all 0.3s var(--ease-out);
+    }
+    .navbar:hover { background: rgba(50, 50, 50, 0.8); border-color: rgba(255,255,255,0.2); }
+    
+    .nav-logo { font-weight: 700; font-size: 14px; letter-spacing: 1px; color: #fff; }
+    .nav-items { display: flex; gap: 20px; align-items: center; }
+    .nav-item { 
+        font-size: 12px; font-weight: 500; color: var(--c-text-muted); 
+        transition: 0.3s; cursor: pointer; position: relative; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .nav-item:hover, .nav-item.active { color: var(--c-text-main); }
+    .nav-item.active::after {
+        content: ''; position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%);
+        width: 4px; height: 4px; background: var(--c-accent); border-radius: 50%;
+    }
+
+    /* =========================================
+       3. Visual Components & Layout
+       ========================================= */
+    .section { display: none; opacity: 0; transition: opacity 0.8s ease; padding-top: 0; }
+    .section.active { display: block; opacity: 1; }
+
+    .hero-title {
+        font-size: 80px; font-weight: 800; line-height: 1.05;
+        background: linear-gradient(180deg, #fff 0%, #888 100%);
+        -webkit-background-clip: text; color: transparent;
+        margin-bottom: 20px; letter-spacing: -2px;
+        opacity: 0; transform: translateY(50px);
+        animation: slideUp 1s var(--ease-out) 0.5s forwards;
+    }
+    
+    .bento-grid {
+        display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;
+        max-width: 1200px; margin: 0 auto; padding: 40px 20px;
+    }
+    .bento-card {
+        background: #0a0a0a; border-radius: 28px; overflow: hidden; position: relative;
+        transition: transform 0.4s var(--ease-out), box-shadow 0.4s;
+        border: 1px solid rgba(255,255,255,0.08);
+        cursor: pointer; min-height: 350px;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .bento-card:hover { transform: scale(1.02); box-shadow: 0 20px 50px rgba(0,0,0,0.5); z-index: 2; border-color: rgba(255,255,255,0.2); }
+    
+    /* Default image setting (cover for cropping) */
+    .bento-card img {
+        width: 100%; height: 100%; object-fit: cover; object-position: center; opacity: 0.6; transition: 0.6s;
+        display: block; position: absolute; top: 0; left: 0;
+    }
+    .bento-card:hover img { opacity: 0.9; transform: scale(1.03); }
+
+    .card-content {
+        position: absolute; bottom: 0; left: 0; padding: 30px; width: 100%; z-index: 2;
+        background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 70%, transparent 100%);
+    }
+    .card-label { font-size: 11px; font-weight: 700; color: var(--c-accent); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+    .card-h { font-size: 26px; font-weight: 600; margin-bottom: 8px; color: #fff; letter-spacing: -0.5px; }
+    .card-p { font-size: 14px; color: #bbb; line-height: 1.5; }
+
+    .span-2 { grid-column: span 2; }
+    .span-4 { grid-column: span 4; min-height: 400px; }
+
+    /* Detail Pages */
+    .detail-hero {
+        height: 70vh; width: 100%; position: relative; overflow: hidden;
+        display: flex; align-items: center; justify-content: center;
+        background: #000; /* For images that are 'contain' */
+    }
+    .detail-bg {
+        position: absolute; top:0; left:0; width:100%; height:100%; object-fit: cover; object-position: center;
+        filter: brightness(0.4);
+    }
+    .detail-text { z-index: 2; text-align: center; max-width: 800px; padding: 0 20px; }
+    .detail-text h1 { font-size: 64px; font-weight: 800; letter-spacing: -1px; margin-bottom: 20px; color: #fff; }
+    .detail-text p { font-size: 20px; color: #ccc; font-weight: 300; line-height: 1.5; }
+
+    .feature-section {
+        max-width: 1100px; margin: 100px auto; padding: 0 20px;
+        display: flex; align-items: center; gap: 60px;
+    }
+    .feature-section.rev { flex-direction: row-reverse; }
+    .f-info { flex: 1; }
+    .f-info h2 { font-size: 36px; margin-bottom: 24px; font-weight: 700; letter-spacing: -0.5px; color: #fff; }
+    .f-info p, .f-info li { font-size: 17px; color: #aaa; line-height: 1.7; margin-bottom: 16px; font-weight: 300; }
+    .f-info ul { margin-left: 20px; margin-bottom: 20px; }
+    .f-info li { margin-bottom: 8px; }
+    
+    .f-media { flex: 1.2; border-radius: 24px; overflow: hidden; position: relative; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+    .f-media img { width:100%; height:100%; object-fit: cover; transition: 0.8s; display:block; aspect-ratio: 4/3; }
+    .f-media:hover img { transform: scale(1.05); }
+
+    .data-highlight {
+        display: inline-block; padding: 2px 8px; background: rgba(255, 255, 255, 0.1);
+        color: #fff; border-radius: 6px; font-weight: 500;
+    }
+
+    @keyframes slideUp { to { opacity: 1; transform: translateY(0); } }
+
+    .btn-glow {
+        margin-top: 40px; padding: 16px 40px; background: #fff; color: #000;
+        border-radius: 100px; font-weight: 600; font-size: 16px; transition: 0.3s;
+        box-shadow: 0 0 20px rgba(255,255,255,0.2); display: inline-block; cursor: pointer;
+    }
+    .btn-glow:hover { transform: scale(1.05); box-shadow: 0 0 40px rgba(255,255,255,0.4); }
+
+    @media (max-width: 980px) {
+        .bento-grid { grid-template-columns: repeat(2, 1fr); }
+        .span-2 { grid-column: span 2; }
+        .hero-title { font-size: 56px; }
+        .detail-text h1 { font-size: 48px; }
+        .feature-section { flex-direction: column; gap: 40px; text-align: left; }
+        .feature-section.rev { flex-direction: column; }
+    }
+    @media (max-width: 768px) {
+        .navbar { padding: 12px 16px; width: 95%; justify-content: space-around; }
+        .nav-logo { display: none; }
+        .nav-item { font-size: 11px; }
+    }
+    @media (max-width: 600px) {
+        .bento-grid { grid-template-columns: 1fr; }
+        .span-2, .span-4 { grid-column: span 1; }
+        .hero-title { font-size: 42px; }
+    }
+</style>
+</head>
+<body>
+
+<div id="loader">
+    <div class="loader-logo">RICHARD WAGAMESE</div>
+    <div class="loader-line"></div>
+</div>
+
+<nav class="navbar">
+    <div class="nav-logo">🪶 BY CHARLES HUANG</div>
+    <div class="nav-items">
+        <div class="nav-item active" onclick="go('home')">Overview</div>
+        <div class="nav-item" onclick="go('journey')">Childhood</div>
+        <div class="nav-item" onclick="go('works')">Works</div>
+        <div class="nav-item" onclick="go('ideas')">Main Ideas</div>
+        <div class="nav-item" onclick="go('reflection')">Listen</div>
+    </div>
+</nav>
+
+<div id="home" class="section active">
+    <div style="position: relative; height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
+        <img src="images/hero-bg.jpg" style="position: absolute; top:0; left:0; width:100%; height:100%; object-fit: cover; opacity: 0.5; z-index: -1;" alt="Northern Wilderness">
+        <div style="position: absolute; top:0; left:0; width:100%; height:100%; background: linear-gradient(to bottom, transparent, #000); z-index: -1;"></div>
+        
+        <h1 class="hero-title">Richard Wagamese</h1>
+        <p style="font-size: 24px; color: #ddd; max-width: 700px; margin: 0 auto; font-weight: 300; opacity: 0; animation: slideUp 1s var(--ease-out) 0.8s forwards;">
+            He is an Indigenous writer and journalist from Canada.
+        </p>
+        <a class="btn-glow" onclick="go('journey')" style="opacity: 0; animation: slideUp 1s var(--ease-out) 1s forwards;">Start Reading</a>
+    </div>
+
+    <div style="border-top: 1px solid #222; border-bottom: 1px solid #222; background: #050505;">
+        <div style="max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); text-align: center; padding: 60px 20px; gap: 20px;">
+            <div><h2 style="font-size: 28px; color: #fff; margin-bottom: 8px;">Minaqui, Ontario</h2><p style="color: #666; font-size: 12px; font-weight: 700; letter-spacing: 1px;">BIRTHPLACE</p></div>
+            <div><h2 style="font-size: 28px; color: #fff; margin-bottom: 8px;">Ojibwe</h2><p style="color: #666; font-size: 12px; font-weight: 700; letter-spacing: 1px;">ETHNIC GROUP</p></div>
+            <div><h2 style="font-size: 28px; color: #fff; margin-bottom: 8px;">Survivor</h2><p style="color: #666; font-size: 12px; font-weight: 700; letter-spacing: 1px;">SIXTIES SCOOP</p></div>
+        </div>
+    </div>
+
+    <div class="bento-grid">
+        <div class="bento-card span-2" onclick="go('journey')">
+            <img src="images/author-portrait.jpg" style="object-fit: contain; background: #000;" alt="Richard Wagamese Portrait">
+            <div class="card-content">
+                <div class="card-label">CHILDHOOD</div>
+                <div class="card-h">About Author</div>
+                <div class="card-p">He was taken from his parents at the age of two and grew up in foster care.</div>
+            </div>
+        </div>
+        <div class="bento-card" onclick="go('works')">
+            <img src="images/indian-horse-cover.jpg" alt="Indian Horse Book">
+            <div class="card-content">
+                <div class="card-label">NOTABLE WORKS</div>
+                <div class="card-h">Indian Horse</div>
+                <div class="card-p">Telling the story of the trauma of boarding school and the redemption of hockey.</div>
+            </div>
+        </div>
+        <div class="bento-card" onclick="go('reflection')">
+            <img src="images/healing-nature.jpg" alt="Healing Nature">
+            <div class="card-content">
+                <div class="card-label">LISTEN</div>
+                <div class="card-h">Self-Healing</div>
+                <div class="card-p">Healing is not about forgetting the past, but about bravely facing trauma.</div>
+            </div>
+        </div>
+        <div class="bento-card span-4" onclick="go('ideas')">
+            <img src="images/notable-books.jpg" style="object-position: center 30%;" alt="Notable Works">
+            <div class="card-content">
+                <div class="card-label">MAIN IDEAS IN HIS WORK</div>
+                <div class="card-h">Understanding History</div>
+                <div class="card-p">The work depicts the real struggles of Indigenous peoples in Canadian history.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="journey" class="section">
+    <div class="detail-hero">
+        <img src="images/author-portrait.jpg" class="detail-bg" style="object-fit: contain; opacity: 0.5;" alt="Author Background">
+        <div class="detail-text">
+            <div style="color: var(--c-accent); font-weight: 700; letter-spacing: 2px; margin-bottom: 12px; text-transform: uppercase;">1. About Author & 2. Childhood</div>
+            <h1>His Childhood</h1>
+            <p>He is a survivor of the Sixties Scoop.</p>
+        </div>
+    </div>
+
+    <div class="feature-section">
+        <div class="f-info">
+            <h2>Early Life</h2>
+            <ul>
+                <li>He was taken from his parents at the age of two.</li>
+                <li>He is a survivor of the Sixties Scoop.</li>
+                <li>He grew up in foster care.</li>
+            </ul>
+        </div>
+        <div class="f-media">
+            <img src="images/reflection-peace.jpg" alt="Reflection and Isolation">
+        </div>
+    </div>
+
+    <div class="feature-section rev">
+        <div class="f-info">
+            <h2>The Journey of Richard Wagamese</h2>
+            <p>Richard Wagamese was abandoned at age two by adults during a drinking trip. He was later taken by child services and grew up in foster care, suffering abuse before leaving at 16.</p>
+            <p>He struggled with homelessness, addiction, and imprisonment, but found refuge in public libraries. At 23, he reunited with his family, where an elder named him "Buffalo Cloud" and told him his purpose was to tell stories.</p>
+        </div>
+        <div class="f-media">
+            <img src="images/author-portrait2.jpg" alt="Richard in Nature">
+        </div>
+    </div>
+</div>
+
+<div id="works" class="section">
+    <div class="detail-hero">
+        <img src="images/indian-horse-cover.jpg" class="detail-bg" style="opacity: 0.3;" alt="Indian Horse Background">
+        <div class="detail-text">
+            <div style="color: var(--c-accent); font-weight: 700; letter-spacing: 2px; margin-bottom: 12px; text-transform: uppercase;">3. Notable Works</div>
+            <h1>Notable Works</h1>
+            <p>Indian Horse, Medicine Walk, Embers, Keeper'n Me.</p>
+        </div>
+    </div>
+
+    <div class="feature-section">
+        <div class="f-info">
+            <h2>Indian Horse</h2>
+            <p>The story of Indian Horse tells the tale of Saul Indian Horse, an Indigenous boy who was forcibly enrolled in the Canadian Indian residential school system as a child, where he suffered abuse and racial discrimination.</p>
+            <p>Later, Saul discovers his talent for hockey and finds hope and success through the sport. However, societal discrimination and childhood trauma continue to affect him, leading him into a period of confusion and alcoholism.</p>
+            <p>Ultimately, by reflecting on and confronting his past, he begins to understand his trauma and finds self-healing.</p>
+            <p style="margin-top: 20px; font-weight: 500; color: #fff;">This book primarily explores:</p>
+            <ul>
+                <li>Trauma caused by Indigenous boarding schools</li>
+                <li>Racial discrimination & Identity</li>
+                <li>Trauma and healing</li>
+                <li>Sports (ice hockey) as escape and hope</li>
+            </ul>
+        </div>
+        <div class="f-media">
+            <img src="images/indian-horse-cover.jpg" style="object-fit: contain; background: #111;" alt="Indian Horse Cover">
+        </div>
+    </div>
+
+    <div class="feature-section rev" style="margin-bottom: 100px;">
+        <div class="f-info">
+            <h2>Other Notable Works</h2>
+            <ul>
+                <li><span class="data-highlight" style="margin-bottom: 8px;">Medicine Walk</span><br>Exploring the father-son relationship and the connection to the land.</li>
+                <li><span class="data-highlight" style="margin-bottom: 8px; margin-top: 10px;">Embers</span><br>A collection of essays about meditation and wisdom.</li>
+                <li><span class="data-highlight" style="margin-bottom: 8px; margin-top: 10px;">Keeper'n Me</span><br>Telling the story of a young man returning to an Indigenous community.</li>
+            </ul>
+        </div>
+        <div class="f-media">
+            <img src="images/notable-books.jpg" alt="Notable Books Collection">
+        </div>
+    </div>
+</div>
+
+<div id="ideas" class="section">
+    <div class="detail-hero">
+        <img src="images/hero-bg.jpg" class="detail-bg" alt="Nature Connection">
+        <div class="detail-text">
+            <div style="color: var(--c-accent); font-weight: 700; letter-spacing: 2px; margin-bottom: 12px; text-transform: uppercase;">4. Main Ideas</div>
+            <h1>Main Ideas in His Work</h1>
+            <p>History, Culture, Land, and Healing.</p>
+        </div>
+    </div>
+
+    <div class="feature-section" style="margin-bottom: 100px;">
+        <div class="f-info">
+            <h2>Core Themes</h2>
+            <ul>
+                <li><strong style="color: #fff;">Understanding History:</strong> The work depicts the real struggles of Indigenous peoples in Canadian history.</li>
+                <li><strong style="color: #fff;">Cultural Respect:</strong> The work respects Indigenous traditions and their powerful vitality.</li>
+                <li><strong style="color: #fff;">Love of the Land:</strong> It teaches us to love and protect the land as Indigenous people do.</li>
+                <li><strong style="color: #fff;">Self-Healing:</strong> The protagonists in the work find ways to heal trauma and reconcile with the past.</li>
+            </ul>
+        </div>
+        <div class="f-media">
+            <img src="images/healing-nature.jpg" alt="Healing Nature">
+        </div>
+    </div>
+</div>
+
+<div id="reflection" class="section">
+    <div class="detail-hero">
+        <img src="images/reflection-peace.jpg" class="detail-bg" alt="Inner Peace">
+        <div class="detail-text">
+            <div style="color: var(--c-accent); font-weight: 700; letter-spacing: 2px; margin-bottom: 12px; text-transform: uppercase;">5. Listen</div>
+            <h1>My Reflection</h1>
+            <p>What I learned from his legacy.</p>
+        </div>
+    </div>
+
+    <div class="feature-section rev" style="margin-bottom: 100px;">
+        <div class="f-info">
+            <h2>What I Learned</h2>
+            <ul>
+                <li><strong style="color: #fff;">Self-Healing:</strong> I learned that healing is not about forgetting the past, but about bravely facing trauma and making peace with it.</li>
+                <li><strong style="color: #fff;">Inner Peace:</strong> Through his essay collection <i>Embers</i>, I learned the importance of finding inner peace in silence and nature.</li>
+                <li><strong style="color: #fff;">Power of Forgiveness:</strong> His work taught me that forgiving others (even those who have hurt you) is key to self-liberation.</li>
+                <li><strong style="color: #fff;">Redemption through Writing:</strong> I saw how he transformed pain into art, proving that creativity can restore dignity.</li>
+                <li><strong style="color: #fff;">Value of Connection:</strong> He made me understand that the "connection" between people, between people and nature, and between people and ancestors is the ultimate solution to loneliness.</li>
+            </ul>
+        </div>
+        <div class="f-media">
+            <img src="images/healing-nature.jpg" style="filter: grayscale(30%);" alt="Reflection Focus">
+        </div>
+    </div>
+</div>
+
+<footer style="border-top: 1px solid #1a1a1a; padding: 60px 0; text-align: center; background: #050505;">
+    <div style="font-weight: 700; color: #fff; font-size: 18px; margin-bottom: 10px; letter-spacing: 1px;">🪶 THE LEGACY OF RICHARD WAGAMESE</div>
+    <p style="color: #888; font-size: 15px; margin-bottom: 5px;">Designed and Created by <strong>Charles Huang</strong></p>
+    <p style="color: #555; font-size: 13px;">Student Portfolio • Class Project</p>
+</footer>
+
+<script>
+    // 1. Loader Logic
+    window.addEventListener('load', () => {
+        setTimeout(() => {
+            document.getElementById('loader').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('loader').style.visibility = 'hidden';
+            }, 800);
+            
+            // Trigger Hero animations
+            const title = document.querySelector('.hero-title');
+            if(title) {
+                title.style.animation = 'none';
+                title.offsetHeight; /* trigger reflow */
+                title.style.animation = null; 
+            }
+        }, 1200);
+    });
+
+    // 2. Navigation Logic (Handles 5 pages)
+    function go(pageId) {
+        // Scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        // Update Nav Active State
+        const navItems = document.querySelectorAll('.nav-item');
+        navItems.forEach(el => el.classList.remove('active'));
+        
+        if(pageId === 'home') navItems[0].classList.add('active');
+        if(pageId === 'journey') navItems[1].classList.add('active');
+        if(pageId === 'works') navItems[2].classList.add('active');
+        if(pageId === 'ideas') navItems[3].classList.add('active');
+        if(pageId === 'reflection') navItems[4].classList.add('active');
+
+        // Switch Sections with fade effect
+        document.querySelectorAll('.section').forEach(el => {
+            el.style.opacity = 0;
+            setTimeout(() => {
+                el.classList.remove('active');
+                if(el.id === pageId) {
+                    el.classList.add('active');
+                    setTimeout(() => { el.style.opacity = 1; }, 50);
+                }
+            }, 400); 
+        });
+    }
+</script>
+</body>
+</html>
